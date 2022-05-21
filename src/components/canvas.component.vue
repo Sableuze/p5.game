@@ -3,6 +3,8 @@
 </template>
 
 <script>
+import {imageOne} from "@/assets/images";
+
 const script = (p5) => {
   let numSegments = 10;
   let direction = 'right';
@@ -17,16 +19,16 @@ const script = (p5) => {
   let xFruit = 100;
   let yFruit = 50;
   let scoreElem;
-
+  let img
   const w = 500
   const h = 500
 
   p5.setup = () => {
     scoreElem = p5.createDiv(`${gameTitle} = 0`);
-    scoreElem.style(20, 20);
+    scoreElem.position(20, 20);
     scoreElem.id = 'score';
     scoreElem.style('color', 'red');
-
+    img = p5.loadImage(imageOne)
     p5.createCanvas(w, h);
     p5.frameRate(15);
     p5.stroke(255);
@@ -107,13 +109,14 @@ const script = (p5) => {
     }
   }
 
-  /*
-   Whenever the snake consumes a fruit, I increment the number of segments,
-   and just insert the tail segment again at the start of the array (basically
-   I add the last segment again at the tail, thereby extending the tail)
-  */
+  function checkFruitAndSnakeCollision()
+
+
   function checkForFruit() {
-    p5.point(xFruit, yFruit);
+    p5.image(img, xFruit, yFruit, 30, 30);
+
+
+    // p5.point(xFruit, yFruit);
     if (xCor[xCor.length - 1] === xFruit && yCor[yCor.length - 1] === yFruit) {
       const prevScore = parseInt(scoreElem.html().substring(8));
       scoreElem.html('Score = ' + (prevScore + 1));
@@ -168,7 +171,12 @@ export default {
   mounted() {
     const P5 = require("p5");
     new P5(script);
-  }
+  },
+  data() {
+    return {
+      stage: 0
+    }
+  },
 };
 </script>
 
