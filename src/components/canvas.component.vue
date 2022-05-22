@@ -14,16 +14,13 @@ import 'p5/lib/addons/p5.sound';
 import {alarmAsset, evilLaughtSoundAsset, worriedMusicAsset} from "../assets/sounds";
 import {gsap} from "gsap";
 import {backTimer} from "../timer";
+import {playMusic, stopMusic, checkObjectsCollision} from "../misc/helpers";
 
 let gameStatus = {
   started: false,
-  over: false,
-  success: null,
   scene: 0
 }
-let refresh = {
-  ok: false
-}
+
 
 const script = (p5) => {
   class turrent {
@@ -129,13 +126,13 @@ const script = (p5) => {
   }
 
   let numSegments = 10;
-  let stage = 0;
+  let points = 0;
   let isSecondStageSet = false
   let drawText
   const showTextStageOne = 'Очки'
   const showTextStageTwo = 'УРОВЕНЬ БЕЗОПАСНОСТИ'
   const showTextSceneTwo = 'ОСТАЛОСЬ'
-  let maxStages = 5
+  let maxPoints = 5
   let targetTime = 144000000
   let direction = 'right';
 
@@ -143,8 +140,8 @@ const script = (p5) => {
   const yStart = 250; //starting y coordinate for snake
   const diff = 10;
 
-  let xCor = [];
-  let yCor = [];
+  let xSnakeArr = [];
+  let ySnakeArr = [];
 
   let xFruit = 100;
   let yFruit = 50;
@@ -182,6 +179,32 @@ const script = (p5) => {
     playMusic(stillSound)
   }
 
+  function restartGame() {
+    gameStatus.scene = 0
+    numSegments = 10;
+    points = 0;
+    isSecondStageSet = false
+    maxPoints = 5
+    targetTime = 144000000
+    direction = 'right';
+
+    xSnakeArr = [];
+    ySnakeArr = [];
+
+    xFruit = 100;
+    yFruit = 50;
+
+
+    targetBalloons = [];
+    turPosX = 300;
+    turPosY = 300;
+    targetTimer = 0;
+    balloonSpawnMultiplier = 10;
+    balloonSizeMultiplier = 2;
+    initSnakeCoords()
+    mainTurrent = new turrent(300, 300)
+  }
+
   p5.setup = () => {
     drawText = showTextStageOne
     p5.angleMode(p5.DEGREES);
@@ -196,13 +219,11 @@ const script = (p5) => {
 
     initImages()
     initMusic()
+    initSnakeCoords()
+
     updateFruitCoordinates();
 
-    p5.image(getFruitImage(stage), xFruit, yFruit, wFruit, hFruit);
-    for (let i = 0; i < numSegments; i++) {
-      xCor.push(xStart + i * diff);
-      yCor.push(yStart);
-    }
+    p5.image(getFruitImage(points), xFruit, yFruit, wFruit, hFruit);
 
 
   }
@@ -212,13 +233,12 @@ const script = (p5) => {
     p5.background(0);
     if (gameStatus.started && gameStatus.scene === 0) {
       for (let i = 0; i < numSegments - 1; i++) {
-        p5.line(xCor[i], yCor[i], xCor[i + 1], yCor[i + 1]);
+        p5.line(xSnakeArr[i], ySnakeArr[i], xSnakeArr[i + 1], ySnakeArr[i + 1]);
       }
       updateSnakeCoordinates();
       checkGameStatus();
-      checkForFruit();
-      redrawFruit(stage)
-      p5.text(`${drawText} : ${stage}`, 10, 30)
+
+      p5.text(`${drawText} : ${points}`, 10, 30)
       p5.fill(50)
 
     } else if (gameStatus.started && gameStatus.scene === 1) {
@@ -253,7 +273,7 @@ const script = (p5) => {
       mainTurrent.display();
       mainTurrent.move();
       if (mainTurrent.hitScan()) {
-        refresh.ok = true
+        restartGame()
       }
     }
   }
@@ -261,59 +281,57 @@ const script = (p5) => {
 
   function updateSnakeCoordinates() {
     for (let i = 0; i < numSegments - 1; i++) {
-      xCor[i] = xCor[i + 1];
-      yCor[i] = yCor[i + 1];
+      xSnakeArr[i] = xSnakeArr[i + 1];
+      ySnakeArr[i] = ySnakeArr[i + 1];
     }
     switch (direction) {
       case 'right':
-        xCor[numSegments - 1] = xCor[numSegments - 2] + diff;
-        yCor[numSegments - 1] = yCor[numSegments - 2];
+        xSnakeArr[numSegments - 1] = xSnakeArr[numSegments - 2] + diff;
+        ySnakeArr[numSegments - 1] = ySnakeArr[numSegments - 2];
         break;
       case 'up':
-        xCor[numSegments - 1] = xCor[numSegments - 2];
-        yCor[numSegments - 1] = yCor[numSegments - 2] - diff;
+        xSnakeArr[numSegments - 1] = xSnakeArr[numSegments - 2];
+        ySnakeArr[numSegments - 1] = ySnakeArr[numSegments - 2] - diff;
         break;
       case 'left':
-        xCor[numSegments - 1] = xCor[numSegments - 2] - diff;
-        yCor[numSegments - 1] = yCor[numSegments - 2];
+        xSnakeArr[numSegments - 1] = xSnakeArr[numSegments - 2] - diff;
+        ySnakeArr[numSegments - 1] = ySnakeArr[numSegments - 2];
         break;
       case 'down':
-        xCor[numSegments - 1] = xCor[numSegments - 2];
-        yCor[numSegments - 1] = yCor[numSegments - 2] + diff;
+        xSnakeArr[numSegments - 1] = xSnakeArr[numSegments - 2];
+        ySnakeArr[numSegments - 1] = ySnakeArr[numSegments - 2] + diff;
         break;
     }
   }
 
-  function playMusic(music) {
-    music.play()
-  }
 
-  function stopMusic(music) {
-    music.stop()
-  }
 
   /*
-   I always check the snake's head position xCor[xCor.length - 1] and
-   yCor[yCor.length - 1] to see if it touches the game's boundaries
+   I always check the snake's head position xSnakeArr[xSnakeArr.length - 1] and
+   ySnakeArr[ySnakeArr.length - 1] to see if it touches the game's boundaries
    or if the snake hits itself.
   */
   function checkGameStatus() {
-    if (stage === 3 && !isSecondStageSet) {
+    if (points === 3 && !isSecondStageSet) {
       setSecondStage()
+      checkForFruit();
+      redrawFruit(points)
     }
     if (
-        xCor[xCor.length - 1] > p5.width ||
-        xCor[xCor.length - 1] < 0 ||
-        yCor[yCor.length - 1] > p5.height ||
-        yCor[yCor.length - 1] < 0 ||
+        xSnakeArr[xSnakeArr.length - 1] > p5.width ||
+        xSnakeArr[xSnakeArr.length - 1] < 0 ||
+        ySnakeArr[ySnakeArr.length - 1] > p5.height ||
+        ySnakeArr[ySnakeArr.length - 1] < 0 ||
         checkSnakeCollision()
     ) {
-      p5.noLoop();
-      refresh.ok = true
-    } else if (stage > maxStages) {
+      restartGame()
+    } else if (points > maxPoints) {
       setSecondScene()
     }
-
+    else {
+      checkForFruit();
+      redrawFruit(points)
+    }
   }
 
   async function setSecondStage() {
@@ -349,45 +367,31 @@ const script = (p5) => {
   }
 
   function checkSnakeCollision() {
-    const snakeHeadX = xCor[xCor.length - 1];
-    const snakeHeadY = yCor[yCor.length - 1];
-    for (let i = 0; i < xCor.length - 1; i++) {
-      if (xCor[i] === snakeHeadX && yCor[i] === snakeHeadY) {
+    const snakeHeadX = xSnakeArr[xSnakeArr.length - 1];
+    const snakeHeadY = ySnakeArr[ySnakeArr.length - 1];
+    for (let i = 0; i < xSnakeArr.length - 1; i++) {
+      if (xSnakeArr[i] === snakeHeadX && ySnakeArr[i] === snakeHeadY) {
         return true;
       }
     }
   }
 
-  function checkObjectsCollision(obj1X, obj1Y, obj1W, obj1H, obj2X, obj2Y, obj2W, obj2H) {
-
-    let XColl = false;
-    let YColl = false
-    if ((obj1X + obj1W >= obj2X) && (obj1X <= obj2X + obj2W)) XColl = true;
-    if ((obj1Y + obj1H >= obj2Y) && (obj1Y <= obj2Y + obj2H)) YColl = true;
-
-    if (XColl && YColl) {
-      return true;
-    }
-    return false
-  }
-
-
   function checkForFruit() {
-    const xSnake = xCor[xCor.length - 1]
-    const ySnake = yCor[yCor.length - 1]
+    const xSnake = xSnakeArr[xSnakeArr.length - 1]
+    const ySnake = ySnakeArr[ySnakeArr.length - 1]
     // p5.point(xFruit, yFruit);
     if (checkObjectsCollision(xSnake, ySnake, 1, 1, xFruit, yFruit, wFruit, hFruit)) {
-      xCor.unshift(xCor[0]);
-      yCor.unshift(yCor[0]);
+      xSnakeArr.unshift(xSnakeArr[0]);
+      ySnakeArr.unshift(ySnakeArr[0]);
       numSegments++;
-      stage++
+      points++
       updateFruitCoordinates();
-      redrawFruit(getFruitImage(stage))
+      redrawFruit(getFruitImage(points))
     }
   }
 
-  function getFruitImage(stage) {
-    switch (stage) {
+  function getFruitImage(points) {
+    switch (points) {
       case 0:
       case 1:
       case 2:
@@ -404,14 +408,21 @@ const script = (p5) => {
     }
   }
 
-  function redrawFruit(stage) {
-    const img = getFruitImage(stage)
+  function redrawFruit(points) {
+    const img = getFruitImage(points)
     p5.image(img, xFruit, yFruit, wFruit, hFruit);
   }
 
   function updateFruitCoordinates() {
+    const xSnake = xSnakeArr[xSnakeArr.length - 1]
+    const ySnake = ySnakeArr[ySnakeArr.length - 1]
+    const minX = 40
+    const minY = 40
     xFruit = p5.floor(p5.random(10, (p5.width - 100) / 10)) * 10;
     yFruit = p5.floor(p5.random(10, (p5.height - 100) / 10)) * 10;
+    if ((Math.abs(xSnake - xFruit) < minX) || (Math.abs(ySnake - yFruit) < minY) ){
+      updateFruitCoordinates()
+    }
   }
 
   function initImages() {
@@ -426,6 +437,12 @@ const script = (p5) => {
     alarmSound = p5.loadSound(alarmAsset)
     worriedSound = p5.loadSound(worriedMusicAsset)
     evilLaughtSound = p5.loadSound(evilLaughtSoundAsset)
+  }
+  function initSnakeCoords(){
+    for (let i = 0; i < numSegments; i++) {
+      xSnakeArr.push(xStart + i * diff);
+      ySnakeArr.push(yStart);
+    }
   }
 
   p5.keyPressed = (e) => {
@@ -461,26 +478,15 @@ export default {
     const P5 = require("p5");
     new P5(script);
     this.gameStatus = gameStatus
-    this.refresh = refresh
+
   },
   data() {
     return {
-      stage: 0,
-      instance: null,
-      gameStatus: null,
-      refresh: refresh,
+      gameStatus: ''
     }
   },
   computed: {},
 
-  watch: {
-    refresh: {
-      handler() {
-        this.$emit('onGameOver')
-      },
-      deep: true,
-    }
-  }
 
 };
 </script>
