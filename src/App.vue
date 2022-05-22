@@ -39,10 +39,15 @@ export default {
 </script>
 
 <style>
+body{
+  background: url("./assets/mushroomsBg2.jpg") repeat;
+
+}
 body,
 html {
   margin: 0;
   padding: 0;
+
 }
 
 #app {
