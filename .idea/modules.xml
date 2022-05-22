@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../DemoAscii/.idea/DemoAscii.iml" filepath="$PROJECT_DIR$/../DemoAscii/.idea/DemoAscii.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shooter/.idea/shooter.iml" filepath="$PROJECT_DIR$/../shooter/.idea/shooter.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/vueP5.iml" filepath="$PROJECT_DIR$/.idea/vueP5.iml" />
     </modules>
   </component>

@@ -1,12 +1,12 @@
 <template>
   <div id="app">
-    <VueCanvas @onGameOver="onGameOver"/>
+
+    <VueCanvas @onGameOver="onGameOver" :key="key"/>
   </div>
 </template>
 
 <script>
 import VueCanvas from "./components/canvas.component";
-
 export default {
   name: "App",
   components: {
@@ -14,14 +14,15 @@ export default {
   },
   data() {
     return {
-      stage: ''
+      stage: 0,
+      key: 0
     }
   },
   methods: {
-    onGameOver(success) {
-      console.log(success)
-      alert(success)
-    }
+    onGameOver() {
+      window.location.reload()
+    },
+
   },
 };
 </script>

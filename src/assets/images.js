@@ -1,5 +1,5 @@
-import mashroomImg from './mashroomImg.png'
+import mushroomImg from './mushroomImg.svg'
 import sshImg from './sshImg.png'
 import kursliteImg from './kursliteImg.png'
 import vmwareImg from './vmwareImg.png'
-export {mashroomImg, sshImg, kursliteImg, vmwareImg, }
+export {mushroomImg, sshImg, kursliteImg, vmwareImg, }
