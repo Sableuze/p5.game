@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <VueCanvas @onStageChange="updateStage" @onGameOver="updateStage(0)"/>
+    <VueCanvas @onGameOver="onGameOver"/>
   </div>
 </template>
 
@@ -18,8 +18,9 @@ export default {
     }
   },
   methods: {
-    updateStage(stage) {
-      this.stage = stage
+    onGameOver(success) {
+      console.log(success)
+      alert(success)
     }
   },
 };

@@ -3,10 +3,17 @@
 </template>
 
 <script>
-import {imageOne} from "@/assets/images";
+import {mashroomImg, sshImg, kursliteImg, vmwareImg} from "@/assets/images";
+import 'p5/lib/addons/p5.sound';
 
+let gameStatus = {
+  over: false,
+  success: null
+}
 const script = (p5) => {
   let numSegments = 10;
+  let stage = 0;
+  let maxStages = 3
   let direction = 'right';
 
   const xStart = 0; //starting x coordinate for snake
@@ -18,22 +25,31 @@ const script = (p5) => {
 
   let xFruit = 100;
   let yFruit = 50;
+
   let scoreElem;
-  let img
   const w = 500
   const h = 500
+  const wFruit = 30
+  const hFruit = 30
 
+  let mashroomImage
+  let sshImage
+  let kursliteImage
+  let vmwareImage
   p5.setup = () => {
     scoreElem = p5.createDiv(`${gameTitle} = 0`);
     scoreElem.position(20, 20);
     scoreElem.id = 'score';
     scoreElem.style('color', 'red');
-    img = p5.loadImage(imageOne)
     p5.createCanvas(w, h);
     p5.frameRate(15);
     p5.stroke(255);
     p5.strokeWeight(10);
+
+    initImages()
     updateFruitCoordinates();
+
+    p5.image(getFruitImage(stage), xFruit, yFruit, wFruit, hFruit);
 
     for (let i = 0; i < numSegments; i++) {
       xCor.push(xStart + i * diff);
@@ -49,6 +65,7 @@ const script = (p5) => {
     updateSnakeCoordinates();
     checkGameStatus();
     checkForFruit();
+    redrawFruit(stage)
   }
 
   function updateSnakeCoordinates() {
@@ -92,6 +109,10 @@ const script = (p5) => {
       p5.noLoop();
       const scoreVal = parseInt(scoreElem.html().substring(8));
       scoreElem.html('Game ended! Your score was : ' + scoreVal);
+    } else if (stage > maxStages) {
+      p5.noLoop()
+      gameStatus.over = true
+      gameStatus.success = true
     }
   }
 
@@ -109,33 +130,69 @@ const script = (p5) => {
     }
   }
 
-  function checkFruitAndSnakeCollision()
+  function checkFruitAndSnakeCollision(snakeX, snakeY, fruitX, fruitY, fruitW, fruitH) {
+    if (snakeX === fruitX && snakeY === fruitY) {
+
+    }
+    let XColl = false;
+    let YColl = false
+    if ((snakeX >= fruitX) && (snakeX <= fruitX + fruitW)) XColl = true;
+    if ((snakeY >= fruitY) && (snakeY <= fruitY + fruitH)) YColl = true;
+
+    if (XColl && YColl) {
+      return true;
+    }
+    return false
+  }
 
 
   function checkForFruit() {
-    p5.image(img, xFruit, yFruit, 30, 30);
 
-
+    const xSnake = xCor[xCor.length - 1]
+    const ySnake = yCor[yCor.length - 1]
     // p5.point(xFruit, yFruit);
-    if (xCor[xCor.length - 1] === xFruit && yCor[yCor.length - 1] === yFruit) {
+    if (checkFruitAndSnakeCollision(xSnake, ySnake, xFruit, yFruit, wFruit, hFruit)) {
       const prevScore = parseInt(scoreElem.html().substring(8));
       scoreElem.html('Score = ' + (prevScore + 1));
       xCor.unshift(xCor[0]);
       yCor.unshift(yCor[0]);
       numSegments++;
+      stage++
       updateFruitCoordinates();
+      redrawFruit(getFruitImage(stage))
     }
   }
 
-  function updateFruitCoordinates() {
-    /*
-      The complex math logic is because I wanted the point to lie
-      in between 100 and width-100, and be rounded off to the nearest
-      number divisible by 10, since I move the snake in multiples of 10.
-    */
+  function getFruitImage(stage) {
+    switch (stage) {
+      case 0:
+        return mashroomImage
+      case 1:
+        return sshImage
+      case 2:
+        return kursliteImage
+      case 3:
+        return vmwareImage
+      default:
+        return vmwareImage
+    }
+  }
 
+  function redrawFruit(stage) {
+    const img = getFruitImage(stage)
+    p5.image(img, xFruit, yFruit, wFruit, hFruit);
+  }
+
+  function updateFruitCoordinates() {
     xFruit = p5.floor(p5.random(10, (p5.width - 100) / 10)) * 10;
     yFruit = p5.floor(p5.random(10, (p5.height - 100) / 10)) * 10;
+  }
+
+  function initImages() {
+    mashroomImage = p5.loadImage(mashroomImg)
+    sshImage = p5.loadImage(sshImg)
+    kursliteImage = p5.loadImage(kursliteImg)
+    vmwareImage = p5.loadImage(vmwareImg)
   }
 
   p5.keyPressed = (e) => {
@@ -171,12 +228,25 @@ export default {
   mounted() {
     const P5 = require("p5");
     new P5(script);
+    this.gameStatus = gameStatus
   },
   data() {
     return {
-      stage: 0
+      stage: 0,
+      instance: null,
+      gameStatus: null
     }
   },
+  computed: {},
+  watch: {
+    gameStatus: {
+      handler() {
+        this.$emit('onGameOver', this.gameStatus.success)
+      },
+      deep: true,
+    }
+  }
+
 };
 </script>
 
