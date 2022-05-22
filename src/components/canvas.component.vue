@@ -14,6 +14,7 @@ import 'p5/lib/addons/p5.sound';
 import {alarmAsset, evilLaughtSoundAsset, worriedMusicAsset} from "../assets/sounds";
 import {gsap} from "gsap";
 import {backTimer} from "../timer";
+
 let gameStatus = {
   started: false,
   over: false,
@@ -136,7 +137,6 @@ const script = (p5) => {
   const showTextSceneTwo = 'ОСТАЛОСЬ'
   let maxStages = 5
   let targetTime = 144000000
-  let timerId
   let direction = 'right';
 
   const xStart = 0; //starting x coordinate for snake
@@ -218,7 +218,6 @@ const script = (p5) => {
       checkGameStatus();
       checkForFruit();
       redrawFruit(stage)
-      const {hours, minutes, seconds} = backTimer(targetTime)
       p5.text(`${drawText} : ${stage}`, 10, 30)
       p5.fill(50)
 
@@ -338,14 +337,14 @@ const script = (p5) => {
     await gsap.fromTo('body', {opacity: 0}, {opacity: 1, duration: .5, repeat: 3})
     await gsap.fromTo('#second-scene-text', {opacity: 0}, {
       opacity: 1, duration: 1, repeat: 3, onComplete: () => {
-      gsap.to('#second-scene-text', {opacity: 0})
+        gsap.to('#second-scene-text', {opacity: 0})
       }
     })
     stopMusic(evilLaughtSound)
     playMusic(worriedSound)
     drawText = showTextSceneTwo
     p5.loop()
-    timerId = setInterval( () => targetTime -= 1000, 1000);
+    setInterval(() => targetTime -= 1000, 1000);
 
   }
 
@@ -398,9 +397,10 @@ const script = (p5) => {
       case 4:
         return kursliteImage
       case 5:
+      case 6:
         return vmwareImage
       default:
-        return vmwareImage
+        return mushroomImage
     }
   }
 
@@ -487,14 +487,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#startGame{
+#startGame {
   background: #2196f3;
   color: #fff;
   padding: 12px;
   border-radius: 3px;
   border: 0px;
   margin-bottom: 20px;
+  cursor: pointer;
 }
+
 #vue-canvas {
   display: block;
   margin: 0 auto;
@@ -504,12 +506,14 @@ export default {
   border-radius: 20px;
   overflow: hidden;
 }
-.absolute-center{
+
+.absolute-center {
   position: absolute;
   top: 34%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
 #security-error {
   font-size: 18px;
   opacity: 0;
@@ -517,7 +521,8 @@ export default {
   color: red;
   font-weight: 700;
 }
-#second-scene-text{
+
+#second-scene-text {
   font-size: 18px;
   opacity: 0;
   z-index: 99999;

@@ -1,16 +1,27 @@
 <template>
   <div id="app">
-
-    <VueCanvas @onGameOver="onGameOver" :key="key"/>
+    <p id="preloaderText">Жди жди жди жди</p>
+    <div id="game">
+    <VueCanvas @onGameOver="onGameOver" />
+    </div>
   </div>
 </template>
 
 <script>
 import VueCanvas from "./components/canvas.component";
+import {gsap} from "gsap";
 export default {
   name: "App",
   components: {
     VueCanvas
+  },
+  mounted() {
+    gsap.to('#game', {visibility: 'hidden'})
+    gsap.fromTo('#game', {opacity: 0}, {opacity: 1, duration: 3, onComplete: () => {
+      gsap.to('#preloaderText', {visibility: 'hidden'})
+        gsap.to('#game', {visibility: 'visible'})
+
+      }} )
   },
   data() {
     return {
